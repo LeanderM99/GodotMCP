@@ -13,7 +13,7 @@ public partial class MCPPlugin : EditorPlugin
 
     public override void _EnterTree()
     {
-        Engine.SetMeta("MCPPlugin", this);
+        SetMeta("MCPPlugin", this);
 
         _wsServer = new WebSocketServer();
         AddChild(_wsServer);
@@ -39,7 +39,7 @@ public partial class MCPPlugin : EditorPlugin
     {
         _wsServer?.StopServer();
         _wsServer?.QueueFree();
-        Engine.RemoveMeta("MCPPlugin");
+        RemoveMeta("MCPPlugin");
         GD.Print("[GodotMCP] Plugin disabled");
     }
 

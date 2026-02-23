@@ -125,9 +125,8 @@ public class NodeHandler : BaseHandler
         var node = FindNode(nodePath);
         if (node == null) return Error($"Node not found: {nodePath}");
         var props = new Dictionary();
-        foreach (var prop in node.GetPropertyList())
+        foreach (var propDict in node.GetPropertyList())
         {
-            var propDict = prop.AsGodotDictionary();
             var propName = propDict["name"].AsString();
             var usage = propDict["usage"].AsInt32();
             if ((usage & (int)PropertyUsageFlags.Editor) != 0)
@@ -158,9 +157,8 @@ public class NodeHandler : BaseHandler
         var node = FindNode(nodePath);
         if (node == null) return Error($"Node not found: {nodePath}");
         var signals = new Array();
-        foreach (var sig in node.GetSignalList())
+        foreach (var sigDict in node.GetSignalList())
         {
-            var sigDict = sig.AsGodotDictionary();
             signals.Add(new Dictionary { { "name", sigDict["name"] }, { "args", GetOr(sigDict, "args", new Godot.Collections.Array()) } });
         }
         return Success(new Dictionary { { "signals", signals } });

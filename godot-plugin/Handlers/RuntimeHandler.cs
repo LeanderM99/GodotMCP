@@ -55,9 +55,8 @@ public class RuntimeHandler : BaseHandler
         var node = Plugin.GetTree().Root.GetNodeOrNull(nodePath);
         if (node == null) return Error($"Node not found in runtime tree: {nodePath}");
         var props = new Dictionary();
-        foreach (var prop in node.GetPropertyList())
+        foreach (var propDict in node.GetPropertyList())
         {
-            var propDict = prop.AsGodotDictionary();
             var propName = propDict["name"].AsString();
             var usage = propDict["usage"].AsInt32();
             if ((usage & (int)PropertyUsageFlags.Editor) != 0)

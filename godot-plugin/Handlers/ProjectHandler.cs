@@ -39,9 +39,9 @@ public class ProjectHandler : BaseHandler
         }
 
         var settings = new Dictionary();
-        foreach (var prop in ProjectSettings.GetPropertyList())
+        var ps = (GodotObject)Engine.GetSingleton("ProjectSettings");
+        foreach (var propDict in ps.GetPropertyList())
         {
-            var propDict = prop.AsGodotDictionary();
             var name = propDict["name"].AsString();
             if (string.IsNullOrEmpty(section) || name.StartsWith(section + "/"))
                 settings[name] = ProjectSettings.GetSetting(name);
