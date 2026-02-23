@@ -1,12 +1,16 @@
 #!/usr/bin/env node
 
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { server } from "./server.js";
 
-const server = new McpServer({
-  name: "godot-mcp-server",
-  version: "0.1.0",
-});
+// Import tool registrations (each file registers tools as a side effect)
+import "./tools/project.js";
+import "./tools/scene.js";
+import "./tools/node.js";
+import "./tools/script.js";
+import "./tools/editor.js";
+import "./tools/input.js";
+import "./tools/runtime.js";
 
 async function main() {
   const transport = new StdioServerTransport();
