@@ -1,5 +1,6 @@
 #if TOOLS
 using Godot;
+using GodotMCP.Handlers;
 
 namespace GodotMCP;
 
@@ -23,7 +24,13 @@ public partial class MCPPlugin : EditorPlugin
         _wsServer.MessageReceived += OnMessageReceived;
 
         _router = new CommandRouter();
-        // Handlers registered in subsequent tasks
+        _router.RegisterHandler("project", new ProjectHandler(this));
+        _router.RegisterHandler("scene", new SceneHandler(this));
+        _router.RegisterHandler("node", new NodeHandler(this));
+        _router.RegisterHandler("script", new ScriptHandler(this));
+        _router.RegisterHandler("editor", new EditorHandler(this));
+        _router.RegisterHandler("input", new InputHandler(this));
+        _router.RegisterHandler("runtime", new RuntimeHandler(this));
 
         GD.Print("[GodotMCP] Plugin enabled");
     }
