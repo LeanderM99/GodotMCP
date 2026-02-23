@@ -42,7 +42,7 @@ public class SceneHandler : BaseHandler
         var err = ResourceSaver.Save(scene, path);
         node.Free();
 
-        if (err != Error.Ok)
+        if (err != Godot.Error.Ok)
             return Error($"Failed to save scene: {err}");
 
         EditorInterface.Singleton.GetResourceFilesystem().Scan();
@@ -81,7 +81,7 @@ public class SceneHandler : BaseHandler
         var path = parms["path"].AsString();
         if (!FileAccess.FileExists(path)) return Error($"Scene not found: {path}");
         var err = DirAccess.RemoveAbsolute(path);
-        if (err != Error.Ok) return Error($"Failed to delete: {err}");
+        if (err != Godot.Error.Ok) return Error($"Failed to delete: {err}");
         if (FileAccess.FileExists(path + ".import"))
             DirAccess.RemoveAbsolute(path + ".import");
         EditorInterface.Singleton.GetResourceFilesystem().Scan();

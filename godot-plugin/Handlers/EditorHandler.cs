@@ -78,9 +78,9 @@ public class EditorHandler : BaseHandler
         var code = parms["code"].AsString();
         var expression = new Expression();
         var err = expression.Parse(code);
-        if (err != Error.Ok) return Error($"Parse error: {expression.GetErrorText()}");
+        if (err != Godot.Error.Ok) return Error($"Parse error: {expression.GetErrorText()}");
         var result = expression.Execute();
-        if (expression.HasExecuteResult())
+        if (expression.HasExecuteFailed())
             return Error($"Execution error: {expression.GetErrorText()}");
         return Success(new Dictionary { { "result", result.ToString() } });
     }

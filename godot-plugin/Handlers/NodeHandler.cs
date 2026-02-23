@@ -177,7 +177,7 @@ public class NodeHandler : BaseHandler
         var target = FindNode(targetPath);
         if (target == null) return Error($"Target not found: {targetPath}");
         var err = node.Connect(signalName, new Callable(target, method));
-        if (err != Error.Ok) return Error($"Failed to connect signal: {err}");
+        if (err != Godot.Error.Ok) return Error($"Failed to connect signal: {err}");
         return Success(new Dictionary { { "connected", $"{signalName} -> {targetPath}.{method}" } });
     }
 
