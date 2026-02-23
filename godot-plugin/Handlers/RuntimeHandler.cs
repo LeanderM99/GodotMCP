@@ -25,14 +25,35 @@ public class RuntimeHandler : BaseHandler
     private Dictionary GetSceneTree(Dictionary parms)
     {
         var depth = GetOr(parms, "depth", 10).AsInt32();
-        var root = Plugin.GetTree().Root;
-        var tree = BuildRuntimeTree(root, depth, 0);
         var isPlaying = EditorInterface.Singleton.IsPlayingScene();
+
+        if (!isPlaying)
+        {
+            return Success(new Dictionary
+            {
+                { "is_game_running", false },
+                { "note", "Game is not running. Use scene.play to start a scene first. The game runs as a separate process, so this tool shows editor autoloads only when no game is active." }
+            });
+        }
+
+        // Game runs as a child process — the editor tree doesn't contain game nodes.
+        // Return a compact summary of the editor tree (autoloads only) and explain the limitation.
+        var autoloads = new Array();
+        var root = Plugin.GetTree().Root;
+        for (int i = 0; i < root.GetChildCount(); i++)
+        {
+            var child = root.GetChild(i);
+            var name = child.Name.ToString();
+            // Skip internal editor nodes (they start with @)
+            if (name.StartsWith("@")) continue;
+            autoloads.Add(new Dictionary { { "name", name }, { "type", child.GetClass() }, { "path", child.GetPath().ToString() } });
+        }
+
         return Success(new Dictionary
         {
-            { "tree", tree },
-            { "is_game_running", isPlaying },
-            { "note", isPlaying ? "Tree shows editor + embedded game nodes" : "Game is not running. This shows the editor tree." }
+            { "is_game_running", true },
+            { "autoloads", autoloads },
+            { "note", "Godot runs the game as a separate child process. The editor plugin can only see the editor tree (autoloads listed above). Use editor.game_screenshot to capture the game visually, or use the DebuggerEditorPlugin for remote inspection." }
         });
     }
 

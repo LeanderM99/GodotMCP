@@ -4,7 +4,6 @@ using Godot.Collections;
 
 namespace GodotMCP.Handlers;
 
-using Convert = System.Convert;
 using Math = System.Math;
 
 public class EditorHandler : BaseHandler
@@ -38,11 +37,13 @@ public class EditorHandler : BaseHandler
             case "3d": EditorInterface.Singleton.SetMainScreenEditor("3d"); break;
         }
         var editorViewport = EditorInterface.Singleton.GetBaseControl().GetViewport();
-        var image = editorViewport.GetTexture().GetImage();
-        if (image == null) return Error("Failed to capture viewport");
-        var pngData = image.SavePngToBuffer();
-        var base64 = Convert.ToBase64String(pngData);
-        return Success(new Dictionary { { "image", base64 }, { "format", "png" } });
+        var texRid = editorViewport.GetTexture().GetRid();
+        var image = RenderingServer.Texture2DGet(texRid);
+        if (image == null || image.IsEmpty()) return Error("Failed to capture viewport");
+        var savePath = ProjectSettings.GlobalizePath($"user://mcp_screenshot_{Time.GetTicksMsec()}.png");
+        var err = image.SavePng(savePath);
+        if (err != Godot.Error.Ok) return Error($"Failed to save screenshot: {err}");
+        return Success(new Dictionary { { "path", savePath }, { "format", "png" } });
     }
 
     private Dictionary TakeGameScreenshot()
@@ -50,11 +51,13 @@ public class EditorHandler : BaseHandler
         if (!EditorInterface.Singleton.IsPlayingScene())
             return Error("No game is currently running");
         var editorViewport = EditorInterface.Singleton.GetBaseControl().GetViewport();
-        var image = editorViewport.GetTexture().GetImage();
-        if (image == null) return Error("Failed to capture game viewport");
-        var pngData = image.SavePngToBuffer();
-        var base64 = Convert.ToBase64String(pngData);
-        return Success(new Dictionary { { "image", base64 }, { "format", "png" } });
+        var texRid = editorViewport.GetTexture().GetRid();
+        var image = RenderingServer.Texture2DGet(texRid);
+        if (image == null || image.IsEmpty()) return Error("Failed to capture game viewport");
+        var savePath = ProjectSettings.GlobalizePath($"user://mcp_game_screenshot_{Time.GetTicksMsec()}.png");
+        var err = image.SavePng(savePath);
+        if (err != Godot.Error.Ok) return Error($"Failed to save screenshot: {err}");
+        return Success(new Dictionary { { "path", savePath }, { "format", "png" } });
     }
 
     private Dictionary GetErrors(Dictionary parms)

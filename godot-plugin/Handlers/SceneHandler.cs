@@ -116,6 +116,17 @@ public class SceneHandler : BaseHandler
 
     private Dictionary GetTree(Dictionary parms)
     {
+        var path = GetOr(parms, "path", "").AsString();
+        if (!string.IsNullOrEmpty(path))
+        {
+            // Load and inspect the requested scene without opening it in the editor.
+            var packed = ResourceLoader.Load<PackedScene>(path);
+            if (packed == null) return Error($"Cannot load scene: {path}");
+            var tempRoot = packed.Instantiate();
+            var tree = BuildTreeDict(tempRoot);
+            tempRoot.QueueFree();
+            return Success(new Dictionary { { "tree", tree }, { "path", path } });
+        }
         var root = GetEditedRoot();
         if (root == null) return Error("No scene is currently open");
         return Success(new Dictionary { { "tree", BuildTreeDict(root) } });

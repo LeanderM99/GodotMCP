@@ -3,10 +3,8 @@ import { registerGodotTool } from "../server.js";
 
 registerGodotTool("editor_screenshot", "Take a screenshot of the editor viewport. Returns a base64 PNG image.", "editor", "screenshot",
   { viewport: z.enum(["2d", "3d", "full"]).default("full").describe("Which viewport to capture") },
-  { isImage: true }
 );
 registerGodotTool("editor_game_screenshot", "Take a screenshot of the running game viewport. Returns base64 PNG.", "editor", "game_screenshot",
-  undefined, { isImage: true }
 );
 registerGodotTool("editor_get_errors", "Get recent errors and warnings from the Godot output log.", "editor", "get_errors", {
   count: z.number().default(50).describe("Max number of log entries to return"),
