@@ -1,9 +1,11 @@
 #if TOOLS
 using Godot;
 using Godot.Collections;
-using System;
 
 namespace GodotMCP.Handlers;
+
+using Convert = System.Convert;
+using Math = System.Math;
 
 public class EditorHandler : BaseHandler
 {
@@ -29,7 +31,7 @@ public class EditorHandler : BaseHandler
 
     private Dictionary TakeScreenshot(Dictionary parms)
     {
-        var viewport = parms.GetValueOrDefault("viewport", "full").AsString();
+        var viewport = GetOr(parms, "viewport", "full").AsString();
         switch (viewport)
         {
             case "2d": EditorInterface.Singleton.SetMainScreenEditor("2d"); break;
@@ -57,7 +59,7 @@ public class EditorHandler : BaseHandler
 
     private Dictionary GetErrors(Dictionary parms)
     {
-        var count = parms.GetValueOrDefault("count", 50).AsInt32();
+        var count = GetOr(parms, "count", 50).AsInt32();
         var errors = new Array();
         var startIdx = Math.Max(0, _errorLog.Count - count);
         for (int i = startIdx; i < _errorLog.Count; i++)
@@ -107,7 +109,7 @@ public class EditorHandler : BaseHandler
     private Dictionary OpenFile(Dictionary parms)
     {
         var path = parms["path"].AsString();
-        var line = parms.GetValueOrDefault("line", 0).AsInt32();
+        var line = GetOr(parms, "line", 0).AsInt32();
         var script = ResourceLoader.Load<Script>(path);
         if (script != null)
         {

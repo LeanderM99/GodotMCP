@@ -21,9 +21,9 @@ public class CommandRouter
             return MakeError("invalid_json", "Failed to parse JSON");
 
         var msg = json.AsGodotDictionary();
-        var id = msg.GetValueOrDefault("id", "unknown").AsString();
-        var category = msg.GetValueOrDefault("category", "").AsString();
-        var command = msg.GetValueOrDefault("command", "").AsString();
+        var id = msg.ContainsKey("id") ? msg["id"].AsString() : "unknown";
+        var category = msg.ContainsKey("category") ? msg["category"].AsString() : "";
+        var command = msg.ContainsKey("command") ? msg["command"].AsString() : "";
         var parms = msg.ContainsKey("params")
             ? msg["params"].AsGodotDictionary()
             : new Dictionary();

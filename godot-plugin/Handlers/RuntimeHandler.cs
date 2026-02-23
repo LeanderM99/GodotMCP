@@ -1,9 +1,10 @@
 #if TOOLS
 using Godot;
 using Godot.Collections;
-using System;
 
 namespace GodotMCP.Handlers;
+
+using Math = System.Math;
 
 public class RuntimeHandler : BaseHandler
 {
@@ -23,7 +24,7 @@ public class RuntimeHandler : BaseHandler
 
     private Dictionary GetSceneTree(Dictionary parms)
     {
-        var depth = parms.GetValueOrDefault("depth", 10).AsInt32();
+        var depth = GetOr(parms, "depth", 10).AsInt32();
         var root = Plugin.GetTree().Root;
         var tree = BuildRuntimeTree(root, depth, 0);
         var isPlaying = EditorInterface.Singleton.IsPlayingScene();

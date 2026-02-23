@@ -29,7 +29,7 @@ public class SceneHandler : BaseHandler
     {
         var path = parms["path"].AsString();
         var rootType = parms["root_type"].AsString();
-        var rootName = parms.GetValueOrDefault("root_name", "").AsString();
+        var rootName = GetOr(parms,"root_name", "").AsString();
 
         var node = ClassDB.Instantiate(rootType).AsGodotObject() as Node;
         if (node == null)
@@ -65,7 +65,7 @@ public class SceneHandler : BaseHandler
 
     private Dictionary SaveScene(Dictionary parms)
     {
-        var path = parms.GetValueOrDefault("path", "").AsString();
+        var path = GetOr(parms,"path", "").AsString();
         if (string.IsNullOrEmpty(path))
         {
             EditorInterface.Singleton.SaveScene();
@@ -92,7 +92,7 @@ public class SceneHandler : BaseHandler
     {
         var scenePath = parms["scene_path"].AsString();
         var parentPath = parms["parent_path"].AsString();
-        var name = parms.GetValueOrDefault("name", "").AsString();
+        var name = GetOr(parms,"name", "").AsString();
 
         var parent = FindNode(parentPath);
         if (parent == null) return Error($"Parent node not found: {parentPath}");
@@ -142,7 +142,7 @@ public class SceneHandler : BaseHandler
 
     private Dictionary PlayScene(Dictionary parms)
     {
-        var scenePath = parms.GetValueOrDefault("scene_path", "").AsString();
+        var scenePath = GetOr(parms,"scene_path", "").AsString();
         if (string.IsNullOrEmpty(scenePath))
             EditorInterface.Singleton.PlayMainScene();
         else

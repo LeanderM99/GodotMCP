@@ -24,8 +24,8 @@ public class ScriptHandler : BaseHandler
 
     private Dictionary ListScripts(Dictionary parms)
     {
-        var path = parms.GetValueOrDefault("path", "res://").AsString();
-        var language = parms.GetValueOrDefault("language", "all").AsString();
+        var path = GetOr(parms,"path", "res://").AsString();
+        var language = GetOr(parms,"language", "all").AsString();
         var scripts = new Array();
         CollectScripts(path, language, scripts);
         return Success(new Dictionary { { "scripts", scripts }, { "count", scripts.Count } });

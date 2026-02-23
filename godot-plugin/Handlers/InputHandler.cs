@@ -26,7 +26,7 @@ public class InputHandler : BaseHandler
     private Dictionary SimulateKey(Dictionary parms)
     {
         var keyStr = parms["key"].AsString();
-        var pressed = parms.GetValueOrDefault("pressed", true).AsBool();
+        var pressed = GetOr(parms,"pressed", true).AsBool();
         var keyEvent = new InputEventKey();
         keyEvent.Keycode = OS.FindKeycodeFromString(keyStr);
         keyEvent.Pressed = pressed;
@@ -53,8 +53,8 @@ public class InputHandler : BaseHandler
         var posDict = parms["position"].AsGodotDictionary();
         var x = posDict["x"].AsSingle();
         var y = posDict["y"].AsSingle();
-        var button = parms.GetValueOrDefault("button", "left").AsString();
-        var action = parms.GetValueOrDefault("action", "click").AsString();
+        var button = GetOr(parms,"button", "left").AsString();
+        var action = GetOr(parms,"action", "click").AsString();
         var buttonIndex = button switch { "right" => MouseButton.Right, "middle" => MouseButton.Middle, _ => MouseButton.Left };
         if (action == "move")
         {
@@ -87,8 +87,8 @@ public class InputHandler : BaseHandler
     private Dictionary SimulateAction(Dictionary parms)
     {
         var actionName = parms["action_name"].AsString();
-        var pressed = parms.GetValueOrDefault("pressed", true).AsBool();
-        var strength = parms.GetValueOrDefault("strength", 1.0f).AsSingle();
+        var pressed = GetOr(parms,"pressed", true).AsBool();
+        var strength = GetOr(parms,"strength", 1.0f).AsSingle();
         if (!InputMap.HasAction(actionName)) return Error($"Unknown input action: {actionName}");
         var actionEvent = new InputEventAction();
         actionEvent.Action = actionName;
@@ -125,7 +125,7 @@ public class InputHandler : BaseHandler
             var stepDict = step.AsGodotDictionary();
             var type = stepDict["type"].AsString();
             var stepParams = stepDict.ContainsKey("params") ? stepDict["params"].AsGodotDictionary() : new Dictionary();
-            var delayMs = stepDict.GetValueOrDefault("delay_ms", 0).AsInt32();
+            var delayMs = GetOr(stepDict, "delay_ms", 0).AsInt32();
             var currentDelay = totalDelay;
             if (currentDelay > 0)
             {

@@ -24,8 +24,8 @@ public class ProjectHandler : BaseHandler
 
     private Dictionary GetSettings(Dictionary parms)
     {
-        var section = parms.GetValueOrDefault("section", "").AsString();
-        var key = parms.GetValueOrDefault("key", "").AsString();
+        var section = GetOr(parms,"section", "").AsString();
+        var key = GetOr(parms,"key", "").AsString();
 
         if (!string.IsNullOrEmpty(section) && !string.IsNullOrEmpty(key))
         {
@@ -51,9 +51,9 @@ public class ProjectHandler : BaseHandler
 
     private Dictionary ListFiles(Dictionary parms)
     {
-        var path = parms.GetValueOrDefault("path", "res://").AsString();
-        var filter = parms.GetValueOrDefault("filter", "").AsString();
-        var recursive = parms.GetValueOrDefault("recursive", false).AsBool();
+        var path = GetOr(parms,"path", "res://").AsString();
+        var filter = GetOr(parms,"filter", "").AsString();
+        var recursive = GetOr(parms,"recursive", false).AsBool();
 
         var files = new Array();
         ListFilesRecursive(path, filter, recursive, files);

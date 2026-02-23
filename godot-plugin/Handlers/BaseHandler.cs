@@ -41,5 +41,8 @@ public abstract class BaseHandler
 
     protected Dictionary Error(string message) =>
         new() { { "success", false }, { "error", message } };
+
+    protected static Variant GetOr(Dictionary dict, string key, Variant defaultValue) =>
+        dict.ContainsKey(key) ? dict[key] : defaultValue;
 }
 #endif

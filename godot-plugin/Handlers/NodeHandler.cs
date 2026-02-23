@@ -82,7 +82,7 @@ public class NodeHandler : BaseHandler
     private Dictionary DuplicateNode(Dictionary parms)
     {
         var nodePath = parms["node_path"].AsString();
-        var newName = parms.GetValueOrDefault("new_name", "").AsString();
+        var newName = GetOr(parms,"new_name", "").AsString();
         var node = FindNode(nodePath);
         if (node == null) return Error($"Node not found: {nodePath}");
         var duplicate = node.Duplicate();
@@ -161,7 +161,7 @@ public class NodeHandler : BaseHandler
         foreach (var sig in node.GetSignalList())
         {
             var sigDict = sig.AsGodotDictionary();
-            signals.Add(new Dictionary { { "name", sigDict["name"] }, { "args", sigDict.GetValueOrDefault("args", new Array()) } });
+            signals.Add(new Dictionary { { "name", sigDict["name"] }, { "args", GetOr(sigDict, "args", new Godot.Collections.Array()) } });
         }
         return Success(new Dictionary { { "signals", signals } });
     }
