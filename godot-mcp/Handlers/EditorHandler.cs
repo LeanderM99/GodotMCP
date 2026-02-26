@@ -1,6 +1,7 @@
 #if TOOLS
 using Godot;
 using Godot.Collections;
+using System.Runtime.InteropServices;
 
 namespace GodotMCP.Handlers;
 
@@ -43,7 +44,6 @@ public class EditorHandler : BaseHandler
         var image = RenderingServer.Texture2DGet(texRid);
         if (image == null || image.IsEmpty()) return Error("Failed to capture viewport");
 
-        // Resize for performance — keeps JPEG small and fast
         if (image.GetWidth() > MaxScreenshotWidth)
         {
             var scale = (float)MaxScreenshotWidth / image.GetWidth();
@@ -61,14 +61,53 @@ public class EditorHandler : BaseHandler
         if (!EditorInterface.Singleton.IsPlayingScene())
             return Error("No game is currently running");
 
-        // The game runs as a separate child process — the editor cannot directly
-        // access its viewport.  We capture the editor viewport which shows the
-        // embedded game view when "run in editor" is enabled.
-        var editorViewport = EditorInterface.Singleton.GetBaseControl().GetViewport();
-        var texRid = editorViewport.GetTexture().GetRid();
-        var image = RenderingServer.Texture2DGet(texRid);
+        var projectName = ProjectSettings.GetSetting("application/config/name").AsString();
+        if (string.IsNullOrEmpty(projectName)) projectName = "Godot";
+        var editorPid = (uint)OS.GetProcessId();
+
+        var gameHwnd = Win32Helper.FindGameWindow(projectName, editorPid);
+        if (gameHwnd == System.IntPtr.Zero)
+            return Error($"Could not find game window (looking for '{projectName}'). Make sure the game is running and visible.");
+
+        // Capture the game window using PrintWindow
+        Win32Helper.GetClientRect(gameHwnd, out var rect);
+        int width = rect.Right - rect.Left;
+        int height = rect.Bottom - rect.Top;
+        if (width <= 0 || height <= 0)
+            return Error("Game window has zero size");
+
+        var hdcWindow = Win32Helper.GetDC(gameHwnd);
+        var hdcMem = Win32Helper.CreateCompatibleDC(hdcWindow);
+        var hBitmap = Win32Helper.CreateCompatibleBitmap(hdcWindow, width, height);
+        var hOld = Win32Helper.SelectObject(hdcMem, hBitmap);
+
+        Win32Helper.PrintWindow(gameHwnd, hdcMem, Win32Helper.PW_RENDERFULLCONTENT);
+
+        // Read pixel data from the bitmap
+        var bmi = new Win32Helper.BITMAPINFO();
+        bmi.bmiHeader.biSize = (uint)Marshal.SizeOf<Win32Helper.BITMAPINFOHEADER>();
+        bmi.bmiHeader.biWidth = width;
+        bmi.bmiHeader.biHeight = -height; // top-down
+        bmi.bmiHeader.biPlanes = 1;
+        bmi.bmiHeader.biBitCount = 32;
+        bmi.bmiHeader.biCompression = 0;
+
+        var pixelData = new byte[width * height * 4];
+        Win32Helper.GetDIBits(hdcMem, hBitmap, 0, (uint)height, pixelData, ref bmi, 0);
+
+        // Cleanup GDI objects
+        Win32Helper.SelectObject(hdcMem, hOld);
+        Win32Helper.DeleteObject(hBitmap);
+        Win32Helper.DeleteDC(hdcMem);
+        Win32Helper.ReleaseDC(gameHwnd, hdcWindow);
+
+        // Convert BGRA → RGBA for Godot
+        for (int i = 0; i < pixelData.Length; i += 4)
+            (pixelData[i], pixelData[i + 2]) = (pixelData[i + 2], pixelData[i]);
+
+        var image = Image.CreateFromData(width, height, false, Image.Format.Rgba8, pixelData);
         if (image == null || image.IsEmpty())
-            return Error("Failed to capture viewport. Note: the game runs as a separate process; this tool captures the editor viewport.");
+            return Error("Failed to create image from captured window data");
 
         if (image.GetWidth() > MaxScreenshotWidth)
         {
@@ -78,8 +117,8 @@ public class EditorHandler : BaseHandler
 
         var savePath = ProjectSettings.GlobalizePath($"user://mcp_game_screenshot_{Time.GetTicksMsec()}.jpg");
         var err = image.SaveJpg(savePath, 0.85f);
-        if (err != Godot.Error.Ok) return Error($"Failed to save screenshot: {err}");
-        return Success(new Dictionary { { "path", savePath }, { "format", "jpeg" }, { "note", "Captures the editor viewport. The game runs as a separate process so its window cannot be directly captured." } });
+        if (err != Godot.Error.Ok) return Error($"Failed to save game screenshot: {err}");
+        return Success(new Dictionary { { "path", savePath }, { "format", "jpeg" }, { "width", width }, { "height", height } });
     }
 
     private Dictionary GetErrors(Dictionary parms)

@@ -53,6 +53,8 @@ public class SceneHandler : BaseHandler
     {
         var path = parms["path"].AsString();
         EditorInterface.Singleton.OpenSceneFromPath(path);
+        // Force the main screen to 2D so the viewport actually renders the opened scene
+        EditorInterface.Singleton.SetMainScreenEditor("2D");
         return Success(new Dictionary { { "path", path } });
     }
 
