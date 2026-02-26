@@ -3,7 +3,8 @@ import { z, ZodRawShape } from "zod";
 import { GodotConnection } from "./godot-connection.js";
 
 export const godot = new GodotConnection(
-  parseInt(process.env.GODOT_MCP_PORT || "6550", 10)
+  parseInt(process.env.GODOT_MCP_PORT || "6550", 10),
+  parseInt(process.env.GODOT_MCP_TIMEOUT || "60000", 10)
 );
 
 export const server = new McpServer({

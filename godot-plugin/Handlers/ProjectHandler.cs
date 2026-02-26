@@ -22,6 +22,8 @@ public class ProjectHandler : BaseHandler
         };
     }
 
+    private const int MaxSettingsResults = 500;
+
     private Dictionary GetSettings(Dictionary parms)
     {
         var section = GetOr(parms,"section", "").AsString();
@@ -40,14 +42,37 @@ public class ProjectHandler : BaseHandler
 
         var settings = new Dictionary();
         var ps = (GodotObject)Engine.GetSingleton("ProjectSettings");
+        var prefix = string.IsNullOrEmpty(section) ? "" : section + "/";
+        int count = 0;
+        bool truncated = false;
         foreach (var propDict in ps.GetPropertyList())
         {
             var name = propDict["name"].AsString();
-            if (string.IsNullOrEmpty(section) || name.StartsWith(section + "/"))
+            // Skip internal/metadata properties that bloat results
+            if (name.StartsWith("_") || name.StartsWith("editor_plugins/"))
+                continue;
+            if (string.IsNullOrEmpty(prefix) || name.StartsWith(prefix))
+            {
                 settings[name] = ProjectSettings.GetSetting(name);
+                if (++count >= MaxSettingsResults)
+                {
+                    truncated = true;
+                    break;
+                }
+            }
         }
-        return Success(new Dictionary { { "settings", settings } });
+        var result = new Dictionary { { "settings", settings } };
+        if (truncated)
+            result["truncated"] = true;
+        return Success(result);
     }
+
+    private const int MaxFileResults = 5000;
+
+    private static readonly System.Collections.Generic.HashSet<string> SkipDirs = new(System.StringComparer.OrdinalIgnoreCase)
+    {
+        ".godot", ".import", ".mono", ".vs", "bin", "obj"
+    };
 
     private Dictionary ListFiles(Dictionary parms)
     {
@@ -56,12 +81,22 @@ public class ProjectHandler : BaseHandler
         var recursive = GetOr(parms,"recursive", false).AsBool();
 
         var files = new Array();
-        ListFilesRecursive(path, filter, recursive, files);
-        return Success(new Dictionary { { "files", files } });
+        bool truncated = false;
+        ListFilesRecursive(path, filter, recursive, files, ref truncated);
+        var result = new Dictionary { { "files", files } };
+        if (truncated)
+            result["truncated"] = true;
+        return Success(result);
     }
 
-    private void ListFilesRecursive(string path, string filter, bool recursive, Array files)
+    private void ListFilesRecursive(string path, string filter, bool recursive, Array files, ref bool truncated)
     {
+        if (files.Count >= MaxFileResults)
+        {
+            truncated = true;
+            return;
+        }
+
         var dir = DirAccess.Open(path);
         if (dir == null) return;
 
@@ -71,13 +106,18 @@ public class ProjectHandler : BaseHandler
         {
             if (dir.CurrentIsDir())
             {
-                if (recursive && !fileName.StartsWith("."))
-                    ListFilesRecursive(path.TrimEnd('/') + "/" + fileName, filter, true, files);
+                if (recursive && !fileName.StartsWith(".") && !SkipDirs.Contains(fileName))
+                    ListFilesRecursive(path.TrimEnd('/') + "/" + fileName, filter, true, files, ref truncated);
             }
             else
             {
                 if (string.IsNullOrEmpty(filter) || MatchesFilter(fileName, filter))
                     files.Add(path.TrimEnd('/') + "/" + fileName);
+            }
+            if (files.Count >= MaxFileResults)
+            {
+                truncated = true;
+                break;
             }
             fileName = dir.GetNext();
         }
