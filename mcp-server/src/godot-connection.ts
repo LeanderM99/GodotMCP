@@ -24,7 +24,7 @@ export class GodotConnection {
   private port: number;
   private requestTimeout: number;
 
-  constructor(port = 6550, requestTimeout = 60000) {
+  constructor(port = 6550, requestTimeout = 15000) {
     this.port = port;
     this.requestTimeout = requestTimeout;
   }

@@ -13,12 +13,12 @@ Built for **Godot .NET (C#)**.
 
 ### 1. Install the Godot Plugin
 
-Copy the `godot-plugin/` folder into your Godot project's `addons/` directory:
+Copy the `godot-mcp/` folder into your Godot project's `addons/` directory:
 
 ```
 your-project/
   addons/
-    godot-mcp/          <-- rename godot-plugin to godot-mcp
+    godot-mcp/
       MCPPlugin.cs
       WebSocketServer.cs
       CommandRouter.cs
@@ -60,7 +60,7 @@ Open your Godot project in the editor. The plugin starts a WebSocket server on p
 | Variable | Default | Description |
 |---|---|---|
 | `GODOT_MCP_PORT` | `6550` | WebSocket port the MCP server connects to |
-| `GODOT_MCP_TIMEOUT` | `60000` | Request timeout in milliseconds |
+| `GODOT_MCP_TIMEOUT` | `15000` | Request timeout in milliseconds |
 
 ## Architecture
 
@@ -77,7 +77,7 @@ Your Game Project
 Two components:
 
 - **`mcp-server/`** — TypeScript MCP server using stdio transport. Validates inputs with Zod, forwards commands over WebSocket.
-- **`godot-plugin/`** — C# EditorPlugin that runs inside the Godot editor. Receives commands via WebSocket, executes them against the Godot API, returns results.
+- **`godot-mcp/`** — C# EditorPlugin that runs inside the Godot editor. Receives commands via WebSocket, executes them against the Godot API, returns results.
 
 ## Tools
 

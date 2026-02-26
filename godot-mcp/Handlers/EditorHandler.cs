@@ -28,36 +28,58 @@ public class EditorHandler : BaseHandler
         };
     }
 
+    private const int MaxScreenshotWidth = 1920;
+
     private Dictionary TakeScreenshot(Dictionary parms)
     {
         var viewport = GetOr(parms, "viewport", "full").AsString();
         switch (viewport)
         {
-            case "2d": EditorInterface.Singleton.SetMainScreenEditor("2d"); break;
-            case "3d": EditorInterface.Singleton.SetMainScreenEditor("3d"); break;
+            case "2d": EditorInterface.Singleton.SetMainScreenEditor("2D"); break;
+            case "3d": EditorInterface.Singleton.SetMainScreenEditor("3D"); break;
         }
         var editorViewport = EditorInterface.Singleton.GetBaseControl().GetViewport();
         var texRid = editorViewport.GetTexture().GetRid();
         var image = RenderingServer.Texture2DGet(texRid);
         if (image == null || image.IsEmpty()) return Error("Failed to capture viewport");
-        var savePath = ProjectSettings.GlobalizePath($"user://mcp_screenshot_{Time.GetTicksMsec()}.png");
-        var err = image.SavePng(savePath);
+
+        // Resize for performance — keeps JPEG small and fast
+        if (image.GetWidth() > MaxScreenshotWidth)
+        {
+            var scale = (float)MaxScreenshotWidth / image.GetWidth();
+            image.Resize((int)(image.GetWidth() * scale), (int)(image.GetHeight() * scale));
+        }
+
+        var savePath = ProjectSettings.GlobalizePath($"user://mcp_screenshot_{Time.GetTicksMsec()}.jpg");
+        var err = image.SaveJpg(savePath, 0.85f);
         if (err != Godot.Error.Ok) return Error($"Failed to save screenshot: {err}");
-        return Success(new Dictionary { { "path", savePath }, { "format", "png" } });
+        return Success(new Dictionary { { "path", savePath }, { "format", "jpeg" } });
     }
 
     private Dictionary TakeGameScreenshot()
     {
         if (!EditorInterface.Singleton.IsPlayingScene())
             return Error("No game is currently running");
+
+        // The game runs as a separate child process — the editor cannot directly
+        // access its viewport.  We capture the editor viewport which shows the
+        // embedded game view when "run in editor" is enabled.
         var editorViewport = EditorInterface.Singleton.GetBaseControl().GetViewport();
         var texRid = editorViewport.GetTexture().GetRid();
         var image = RenderingServer.Texture2DGet(texRid);
-        if (image == null || image.IsEmpty()) return Error("Failed to capture game viewport");
-        var savePath = ProjectSettings.GlobalizePath($"user://mcp_game_screenshot_{Time.GetTicksMsec()}.png");
-        var err = image.SavePng(savePath);
+        if (image == null || image.IsEmpty())
+            return Error("Failed to capture viewport. Note: the game runs as a separate process; this tool captures the editor viewport.");
+
+        if (image.GetWidth() > MaxScreenshotWidth)
+        {
+            var scale = (float)MaxScreenshotWidth / image.GetWidth();
+            image.Resize((int)(image.GetWidth() * scale), (int)(image.GetHeight() * scale));
+        }
+
+        var savePath = ProjectSettings.GlobalizePath($"user://mcp_game_screenshot_{Time.GetTicksMsec()}.jpg");
+        var err = image.SaveJpg(savePath, 0.85f);
         if (err != Godot.Error.Ok) return Error($"Failed to save screenshot: {err}");
-        return Success(new Dictionary { { "path", savePath }, { "format", "png" } });
+        return Success(new Dictionary { { "path", savePath }, { "format", "jpeg" }, { "note", "Captures the editor viewport. The game runs as a separate process so its window cannot be directly captured." } });
     }
 
     private Dictionary GetErrors(Dictionary parms)

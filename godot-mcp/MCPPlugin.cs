@@ -60,8 +60,15 @@ public partial class MCPPlugin : EditorPlugin
 
     private void OnMessageReceived(int clientId, string message)
     {
+        if (_router == null || _wsServer == null)
+        {
+            GD.PrintErr("[GodotMCP] Plugin not ready, ignoring message");
+            return;
+        }
         var response = _router.Route(message);
-        _wsServer.SendText(clientId, response);
+        var err = _wsServer.SendText(clientId, response);
+        if (err != Error.Ok)
+            GD.PrintErr($"[GodotMCP] Failed to send response: {err}");
     }
 }
 #endif

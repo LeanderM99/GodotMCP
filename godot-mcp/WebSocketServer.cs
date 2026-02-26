@@ -122,6 +122,8 @@ public partial class WebSocketServer : Node
         if (p.Tcp.GetStatus() == StreamPeerTcp.Status.Connected)
         {
             p.Ws = new WebSocketPeer();
+            p.Ws.OutboundBufferSize = 16 * 1024 * 1024; // 16 MB — large responses (scene trees, settings)
+            p.Ws.InboundBufferSize = 1 * 1024 * 1024;   // 1 MB
             p.Ws.AcceptStream(p.Tcp);
             return false;
         }
